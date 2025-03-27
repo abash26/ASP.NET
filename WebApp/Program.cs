@@ -6,25 +6,21 @@ var app = builder.Build(); // builds webApp
 // app.MapGet("/", () => "Hello World!"); // middleware pipeline component, endpoint handler
 app.Run(async (HttpContext context) =>
 {
-    foreach (var key in context.Request.Query.Keys)
+    if (context.Request.Path.StartsWithSegments("/"))
     {
-        await context.Response.WriteAsync($"{key}: {context.Request.Query[key]}\r");
+        await context.Response.WriteAsync($"The method is: {context.Request.Method}\r\n");
+        await context.Response.WriteAsync($"The Url is: {context.Request.Path}\r\n");
+
+        await context.Response.WriteAsync($"\r\nHeaders:\r\n");
+        foreach (var key in context.Request.Headers.Keys)
+        {
+            await context.Response.WriteAsync($"{key}: {context.Request.Headers[key]}\r\n");
+        }
     }
 
-    if (context.Request.Method == "GET")
+    if (context.Request.Path.StartsWithSegments("/employees"))
     {
-        if (context.Request.Path.StartsWithSegments("/"))
-        {
-            await context.Response.WriteAsync($"The method is: {context.Request.Method}\r\n");
-            await context.Response.WriteAsync($"The Url is: {context.Request.Path}\r\n");
-
-            await context.Response.WriteAsync($"\r\nHeaders:\r\n");
-            foreach (var key in context.Request.Headers.Keys)
-            {
-                await context.Response.WriteAsync($"{key}: {context.Request.Headers[key]}\r\n");
-            }
-        }
-        else if (context.Request.Path.StartsWithSegments("/employees"))
+        if (context.Request.Method == "GET")
         {
             var employees = EmployeesRepository.GetEmployees();
 
@@ -33,12 +29,7 @@ app.Run(async (HttpContext context) =>
                 await context.Response.WriteAsync($"{employee.Name}: {employee.Position}\r\n");
             }
         }
-
-    }
-
-    else if (context.Request.Method == "POST")
-    {
-        if (context.Request.Path.StartsWithSegments("/employees"))
+        else if (context.Request.Method == "POST")
         {
             using var reader = new StreamReader(context.Request.Body);
             var body = await reader.ReadToEndAsync();
@@ -46,12 +37,9 @@ app.Run(async (HttpContext context) =>
             var employee = JsonSerializer.Deserialize<Employee>(body);
 
             EmployeesRepository.AddEmployee(employee);
-        }
-    }
 
-    else if (context.Request.Method == "PUT")
-    {
-        if (context.Request.Path.StartsWithSegments("/employees"))
+        }
+        else if (context.Request.Method == "PUT")
         {
             using var reader = new StreamReader(context.Request.Body);
             var body = await reader.ReadToEndAsync();
@@ -66,13 +54,8 @@ app.Run(async (HttpContext context) =>
             {
                 await context.Response.WriteAsync("Employee not found.");
             }
-
         }
-    }
-
-    else if (context.Request.Method == "DELETE")
-    {
-        if (context.Request.Path.StartsWithSegments("/employees"))
+        else if (context.Request.Method == "DELETE")
         {
             if (context.Request.Query.ContainsKey("id"))
             {
@@ -117,7 +100,8 @@ static class EmployeesRepository
 
     public static List<Employee> GetEmployees() => employees;
 
-    public static void AddEmployee(Employee? employee) { 
+    public static void AddEmployee(Employee? employee)
+    {
         if (employee is not null) employees.Add(employee);
     }
     public static bool UpdateEmployee(Employee? employee)
