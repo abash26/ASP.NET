@@ -8,25 +8,53 @@ app.Run(async (HttpContext context) =>
 {
     if (context.Request.Path.StartsWithSegments("/"))
     {
-        await context.Response.WriteAsync($"The method is: {context.Request.Method}\r\n");
-        await context.Response.WriteAsync($"The Url is: {context.Request.Path}\r\n");
+        context.Response.Headers["Content-Type"] = "text/html";
 
-        await context.Response.WriteAsync($"\r\nHeaders:\r\n");
+        await context.Response.WriteAsync($"The method is: {context.Request.Method}<br/>");
+        await context.Response.WriteAsync($"The Url is: {context.Request.Path}<br/>");
+        await context.Response.WriteAsync($"<b>Headers</b>:<br/>");
+        await context.Response.WriteAsync("<ul>");
         foreach (var key in context.Request.Headers.Keys)
         {
-            await context.Response.WriteAsync($"{key}: {context.Request.Headers[key]}\r\n");
+            await context.Response.WriteAsync($"<li><b>{key}</b>: {context.Request.Headers[key]}</li>");
         }
+        await context.Response.WriteAsync("</ul>");
     }
 
-    if (context.Request.Path.StartsWithSegments("/employees"))
+    else if (context.Request.Path.StartsWithSegments("/employees"))
     {
         if (context.Request.Method == "GET")
         {
-            var employees = EmployeesRepository.GetEmployees();
-
-            foreach (var employee in employees)
+            if (context.Request.Query.ContainsKey("id"))
             {
-                await context.Response.WriteAsync($"{employee.Name}: {employee.Position}\r\n");
+                var id = context.Request.Query["id"];
+
+                if (int.TryParse(id, out int employeeId))
+                {
+                    var employee = EmployeesRepository.GetEmployeeById(employeeId);
+                    if (employee is null)
+                    {
+                        context.Response.StatusCode = 404;
+                        await context.Response.WriteAsync("Employee not found");
+                    }
+                    else
+                    {
+                        context.Response.Headers["Content-Type"] = "text/html";
+                        await context.Response.WriteAsync($"<p><b>{employee.Name}</b>: {employee.Position}</p>");
+                    }
+                }
+            }
+            else
+            {
+                var employees = EmployeesRepository.GetEmployees();
+                context.Response.StatusCode = 200;
+                context.Response.Headers["Content-Type"] = "text/html";
+                await context.Response.WriteAsync("<ul>");
+                foreach (var employee in employees)
+                {
+                    await context.Response.WriteAsync($"<li><b>{employee.Name}</b>: {employee.Position}</li>");
+                }
+                await context.Response.WriteAsync("</ul>");
             }
         }
         else if (context.Request.Method == "POST")
@@ -34,11 +62,29 @@ app.Run(async (HttpContext context) =>
             using var reader = new StreamReader(context.Request.Body);
             var body = await reader.ReadToEndAsync();
 
-            var employee = JsonSerializer.Deserialize<Employee>(body);
+            try
+            {
+                var employee = JsonSerializer.Deserialize<Employee>(body);
 
-            EmployeesRepository.AddEmployee(employee);
+                if (employee is null || employee.Id <= 0)
+                {
+                    context.Response.StatusCode = 400;
+                    return;
+                }
 
+                EmployeesRepository.AddEmployee(employee);
+
+                context.Response.StatusCode = 201;
+                await context.Response.WriteAsync("Employee added successfully.");
+            }
+            catch (Exception ex)
+            {
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsync(ex.ToString());
+                return;
+            }
         }
+
         else if (context.Request.Method == "PUT")
         {
             using var reader = new StreamReader(context.Request.Body);
@@ -48,13 +94,16 @@ app.Run(async (HttpContext context) =>
             var result = EmployeesRepository.UpdateEmployee(employee);
             if (result)
             {
+                context.Response.StatusCode = 204;
                 await context.Response.WriteAsync("Employee updated successfully.");
+                return;
             }
             else
             {
                 await context.Response.WriteAsync("Employee not found.");
             }
         }
+
         else if (context.Request.Method == "DELETE")
         {
             if (context.Request.Query.ContainsKey("id"))
@@ -62,7 +111,7 @@ app.Run(async (HttpContext context) =>
                 var id = context.Request.Query["id"];
                 if (int.TryParse(id, out int employeeId))
                 {
-                    if (context.Request.Headers.Authorization == "frank")
+                    if (context.Request.Headers["Authorization"] == "frank")
                     {
                         var result = EmployeesRepository.DeleteEmployee(employeeId);
 
@@ -72,18 +121,23 @@ app.Run(async (HttpContext context) =>
                         }
                         else
                         {
+                            context.Response.StatusCode = 404;
                             await context.Response.WriteAsync("Employee not found.");
                         }
                     }
                     else
                     {
+                        context.Response.StatusCode = 401;
                         await context.Response.WriteAsync("You are not authorized to delete.");
                     }
                 }
             }
         }
     }
-
+    else
+    {
+        context.Response.StatusCode = 404;
+    }
 });
 
 app.Run(); // listens to port
@@ -99,7 +153,7 @@ static class EmployeesRepository
     ];
 
     public static List<Employee> GetEmployees() => employees;
-
+    internal static Employee? GetEmployeeById(int id) => employees.FirstOrDefault(x => x.Id == id);
     public static void AddEmployee(Employee? employee)
     {
         if (employee is not null) employees.Add(employee);
