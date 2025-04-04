@@ -12,6 +12,5 @@ public class Employee(int id, string name, string position, double salary)
     public string Position { get; set; } = position;
 
     [Required]
-    [Range(50000, 200000)]
     public double Salary { get; set; } = salary;
 }
