@@ -1,20 +1,20 @@
 ﻿namespace Routing.Models;
 
-public static class EmployeesRepository
+public class EmployeesRepository : IEmployeesRepository
 {
-    private static readonly List<Employee> employees =
+    private readonly List<Employee> employees =
     [
         new Employee(1, "John Doe", "Engineer", 60000),
         new Employee(2, "Jane Smith", "Manager", 75000),
         new Employee(3, "Sam Brown", "Technician", 50000)
     ];
-    public static List<Employee> GetEmployees() => employees;
-    internal static Employee? GetEmployeeById(int id) => employees.FirstOrDefault(x => x.Id == id);
-    public static void AddEmployee(Employee? employee)
+    public List<Employee> GetEmployees() => employees;
+    public Employee? GetEmployeeById(int id) => employees.FirstOrDefault(x => x.Id == id);
+    public void AddEmployee(Employee? employee)
     {
         if (employee is not null) employees.Add(employee);
     }
-    public static bool UpdateEmployee(Employee? employee)
+    public bool UpdateEmployee(Employee? employee)
     {
         if (employee is not null)
         {
@@ -31,7 +31,7 @@ public static class EmployeesRepository
         return false;
     }
 
-    public static bool DeleteEmployee(Employee? employee)
+    public bool DeleteEmployee(Employee? employee)
     {
         if (employee is not null)
         {
