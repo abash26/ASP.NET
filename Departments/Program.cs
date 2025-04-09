@@ -1,7 +1,8 @@
 using Departments.Models;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddControllers();
+builder.Services.AddControllersWithViews();
+
 builder.Services.AddSingleton<IDepartmentsRepository, DepartmentsRepository>();
 
 var app = builder.Build();

@@ -1,0 +1,22 @@
+﻿@using Departments.Models
+@model List<Department>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Departments</title>
+</head>
+<body>
+    <h1>Departments:</h1>
+    <ul>
+        @foreach(var department in Model) 
+        {
+            <li>
+                <a href='/departments/details/@department.Id'>@department.Name (@department.Description)</a>
+            </li>
+        }
+    </ul>
+    <br/>
+    <a href='/departments/create'>Add Department</a>
+</body>
+</html>
