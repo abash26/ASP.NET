@@ -1,16 +1,11 @@
 ﻿@model List<string>
 
-<html>
-<head>
-    <title>Error</title>
-</head>
-<body>
-    <h1 style="color:red">Errors:</h1>
-    <ul>
+<h1 class="text-danger mb-4">Errors:</h1>
+<div class="alert alert-danger" role="alert">
+    <ul class="mb-0">
         @foreach (var errorMessage in Model)
         {
             <li>@errorMessage</li>
         }
     </ul>
-</body>
-</html>
+</div>

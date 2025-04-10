@@ -41,16 +41,7 @@ public class DepartmentsController(IDepartmentsRepository departmentsRepository)
     [HttpGet]
     public IActionResult Create()
     {
-        var html = @"
-                <h1>Add Department</h1>
-                <form method='post' action='/departments/create'>
-                    <label>Name: <input type='text' name='Name' /></label><br />
-                    <label>Description: <input type='text' name='Description' /></label><br />
-                    <br/>
-                    <button type='submit'>Add</button>
-                </form>";
-
-        return Content(html, "text/html");
+        return View();
     }
 
     [HttpPost]

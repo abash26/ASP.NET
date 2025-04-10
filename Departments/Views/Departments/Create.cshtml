@@ -1,0 +1,24 @@
+﻿@{
+    ViewBag.Title = "Add Department";
+}
+@section title_section {
+    <h1 class="mb-4">Add Department</h1>
+}
+
+<form method="post" action="/departments/create" class="needs-validation" novalidate>
+    <div class="mb-3">
+        <label for="Name" class="form-label">Name</label>
+        <input type="text" class="form-control" id="Name" name="Name" required>
+        <div class="invalid-feedback">
+            Please provide a department name.
+        </div>
+    </div>
+    <div class="mb-3">
+        <label for="Description" class="form-label">Description</label>
+        <input type="text" class="form-control" id="Description" name="Description" required>
+        <div class="invalid-feedback">
+            Please provide a description.
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary">Add</button>
+</form>
