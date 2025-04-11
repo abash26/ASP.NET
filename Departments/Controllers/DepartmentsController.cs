@@ -10,8 +10,15 @@ public class DepartmentsController(IDepartmentsRepository departmentsRepository)
     [HttpGet]
     public IActionResult Index()
     {
-        var departments = _departmentsRepository.GetDepartments();
+        var departments = _departmentsRepository.GetDepartments(null);
         return View(departments);
+    }
+
+    [Route("/department-list/{filter?}")]
+    public IActionResult SearchDepartments(string? filter)
+    {
+        var departments = _departmentsRepository.GetDepartments(filter);
+        return PartialView("_List", departments);
     }
 
     [HttpGet]
@@ -41,7 +48,7 @@ public class DepartmentsController(IDepartmentsRepository departmentsRepository)
     [HttpGet]
     public IActionResult Create()
     {
-        return View();
+        return View(new Department());
     }
 
     [HttpPost]

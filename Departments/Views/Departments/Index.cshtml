@@ -4,14 +4,33 @@
     ViewBag.Title = "Departments";
 }
 
+@await Html.PartialAsync("_SearchBar")
+
 <h1 class="mb-4">Departments:</h1>
-<ul class="list-group">
-    @foreach (var department in Model)
-    {
-        <li class="list-group-item">
-            <a href='/departments/details/@department.Id'>@department.Name (@department.Description)</a>
-        </li>
-    }
-</ul>
+<table class="table table-striped">
+    <thread>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th></th>
+        </tr>
+    </thread>
+    <tbody id="department-list">
+        @await Component.InvokeAsync("List", new { filter = "sales" })
+    </tbody>
+</table>
 <br />
+
 <a href='/departments/create' class="btn btn-primary">Add Department</a>
+
+<script>
+    document.querySelector("#search-button").addEventListener("click", async () => {
+        var filter = document.querySelector("#search-filter").value;
+
+        var response = await fetch(`/department-list/${filter}`);
+        var departmentsHTML = await response.text();
+
+        document.querySelector("#department-list").innerHTML = departmentsHTML;
+    });
+
+</script>

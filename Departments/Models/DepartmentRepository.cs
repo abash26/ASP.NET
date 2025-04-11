@@ -9,7 +9,12 @@ public class DepartmentsRepository : IDepartmentsRepository
         new Department(3, "QA", "Quanlity Assurance")
     ];
 
-    public List<Department> GetDepartments() => Departments;
+    public List<Department> GetDepartments(string? filter = null)
+    {
+        if (string.IsNullOrWhiteSpace(filter)) return Departments;
+
+        return Departments.Where(x => x.Name is not null && x.Name.ToLower().Contains(filter.ToLower())).ToList();
+    }
 
     public Department? GetDepartmentById(int id)
     {
