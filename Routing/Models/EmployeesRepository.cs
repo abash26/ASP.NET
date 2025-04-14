@@ -8,6 +8,10 @@ public class EmployeesRepository : IEmployeesRepository
         new Employee(2, "Jane Smith", "Manager", 75000),
         new Employee(3, "Sam Brown", "Technician", 50000)
     ];
+    public bool EmployeeExists(int id)
+    {
+        return employees.Any(x => x.Id == id);
+    }
     public List<Employee> GetEmployees() => employees;
     public Employee? GetEmployeeById(int id) => employees.FirstOrDefault(x => x.Id == id);
     public void AddEmployee(Employee? employee)

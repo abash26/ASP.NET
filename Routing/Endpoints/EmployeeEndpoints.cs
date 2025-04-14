@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Routing.Filters;
 using Routing.Models;
 using Routing.Results;
 
@@ -23,66 +24,30 @@ public static class EmployeeEndpoints
         app.MapGet("/employees/{id:int}", (int id, IEmployeesRepository employeesRepository) =>
         {
             var employee = employeesRepository.GetEmployeeById(id);
-            if (employee is null)
-            {
-                return Microsoft.AspNetCore.Http.Results.ValidationProblem(new Dictionary<string, string[]>
-        {
-            {"id", new[] { "Employee is not found." } }
-        }, statusCode: 404);
-            }
             return TypedResults.Ok(employee);
-        });
+        }).AddEndpointFilter<EmployeeExistsFilter>();
 
         app.MapPost("/employees", (Employee? employee, IEmployeesRepository employeesRepository) =>
         {
-            if (employee is null)
-            {
-                return Microsoft.AspNetCore.Http.Results.ValidationProblem(new Dictionary<string, string[]>
-        {
-            {"id", new[] { "Employee is not provided or is not valid." } }
-        }, statusCode: 404);
-            }
-
             employeesRepository.AddEmployee(employee);
             return TypedResults.Created();
-        }).WithParameterValidation();
+        }).WithParameterValidation().AddEndpointFilter<EmployeeCreateFilter>();
 
         app.MapPut("/employees/{id:int}", (int id, [FromBody] Employee employee, IEmployeesRepository employeesRepository) =>
         {
-            if (id != employee.Id)
-            {
-                return Microsoft.AspNetCore.Http.Results.ValidationProblem(new Dictionary<string, string[]>
-        {
-            {"id", new[] { "Employee is not provided or is not valid." } }
-        }, statusCode: 400);
-            }
-            var result = employeesRepository.UpdateEmployee(employee);
-
-            if (!result)
-            {
-                return Microsoft.AspNetCore.Http.Results.ValidationProblem(new Dictionary<string, string[]>
-        {
-            {"id", new[] { "Employee not found." } }
-        }, statusCode: 404);
-            }
-
+            employeesRepository.UpdateEmployee(employee);
             return TypedResults.Ok("Employee updated successfully.");
-        }).WithParameterValidation();
+        })
+        .WithParameterValidation()
+        .AddEndpointFilter<EmployeeExistsFilter>()
+        .AddEndpointFilter<EmployeeUpdateFilter>();
 
         app.MapDelete("/employees/{id:int}", (int id, IEmployeesRepository employeesRepository) =>
         {
             var employee = employeesRepository.GetEmployeeById(id);
-            var result = employeesRepository.DeleteEmployee(employee);
-
-            if (!result)
-            {
-                return Microsoft.AspNetCore.Http.Results.ValidationProblem(new Dictionary<string, string[]>
-        {
-            {"id", new[] { "Employee not found." } }
-        }, statusCode: 404);
-            }
+            employeesRepository.DeleteEmployee(employee);
 
             return TypedResults.Ok(employee);
-        });
+        }).AddEndpointFilter<EmployeeExistsFilter>();
     }
 }
