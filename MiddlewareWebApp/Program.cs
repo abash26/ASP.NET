@@ -12,6 +12,7 @@ app.UseMiddleware<ExceptionMiddleware>();
 // Middleware #1
 app.Use(async (HttpContext context, RequestDelegate next) =>
 {
+    throw new ApplicationException();
     await context.Response.WriteAsync("Middleware #1: Before calling next\r\n");
 
     await next(context);
